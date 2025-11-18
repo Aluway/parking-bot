@@ -62,6 +62,27 @@ def test_check_parking_message_negative():
         assert place_num is None
 
 
+def test_check_parking_message_questions():
+    """Тест сообщений-вопросов (не должны распознаваться)"""
+    client = GigaChatClient()
+    
+    # Различные варианты вопросов
+    test_cases = [
+        "Место 23 свободно?",
+        "Какое место свободно?",
+        "Где свободное место?",
+        "Место 5 свободно ли?",
+        "Освободилось ли место 10?",
+        "Место 7 свободно или нет?",
+        "Что с местом 12?",
+    ]
+    
+    for message in test_cases:
+        is_parking, place_num = client.check_parking_message(message)
+        assert is_parking == False, f"Вопрос не должен распознаваться: {message}"
+        assert place_num is None
+
+
 def test_check_parking_message_with_gigachat():
     """Тест распознавания через GigaChat API (с моком)"""
     client = GigaChatClient()

@@ -30,6 +30,27 @@ class GigaChatClient:
             - is_parking_message: True если сообщение о свободном месте
             - place_number: номер места или None
         """
+        # Проверяем, является ли сообщение вопросом
+        message_lower = message_text.lower().strip()
+        
+        # Проверка на вопросительный знак
+        if '?' in message_text:
+            logger.info("Обнаружен вопросительный знак, сообщение является вопросом")
+            return False, None
+        
+        # Проверка на вопросительные слова и конструкции
+        question_patterns = [
+            r'\b(какое|какой|какая|какие)\b',
+            r'\b(где|когда|кто|что|как|почему|зачем)\b',
+            r'\b(свободно\s+ли|свободно\s+или|свободно\?|свободно\s+нет)\b',
+            r'\b(освободилось\s+ли|освободилось\s+или)\b',
+        ]
+        
+        for pattern in question_patterns:
+            if re.search(pattern, message_lower, re.IGNORECASE):
+                logger.info(f"Обнаружен вопрос по паттерну '{pattern}', сообщение является вопросом")
+                return False, None
+        
         # Извлекаем числа из сообщения
         numbers_in_message = re.findall(r'\d+', message_text)
         
