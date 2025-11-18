@@ -62,20 +62,22 @@ class GigaChatClient:
             b'\xd0\xbd\xd0\xb5 \xd1\x81\xd0\xb2\xd0\xbe\xd0\xb1\xd0\xbe\xd0\xb4',  # не свобод
             b'\xd0\x9d\xd0\xb5 \xd1\x81\xd0\xb2\xd0\xbe\xd0\xb1\xd0\xbe\xd0\xb4',  # Не свобод
             b'\xd0\xbd\xd0\xb5\xd1\x81\xd0\xb2\xd0\xbe\xd0\xb1\xd0\xbe\xd0\xb4',  # несвобод
+            b'\xd0\xbd\xd0\xb5 \xd0\xbe\xd1\x81\xd0\xb2\xd0\xbe\xd0\xb1\xd0\xbe\xd0\xb4',  # не освобод
+            b'\xd0\x9d\xd0\xb5 \xd0\xbe\xd1\x81\xd0\xb2\xd0\xbe\xd0\xb1\xd0\xbe\xd0\xb4',  # Не освобод
             b'\xd0\xb7\xd0\xb0\xd0\xbd\xd1\x8f\xd1\x82',  # занят
             b'\xd0\x97\xd0\xb0\xd0\xbd\xd1\x8f\xd1\x82',  # Занят
             b'\xd0\xb7\xd0\xb0\xd0\xbd\xd1\x8f\xd1\x82\xd0\xbe',  # занято
             b'\xd0\x97\xd0\xb0\xd0\xbd\xd1\x8f\xd1\x82\xd0\xbe',  # Занято
         ]
         
-        has_parking = any(pb in message_bytes for pb in parking_bytes_list)
-        has_free = any(fb in message_bytes for fb in free_bytes_list)
+        # Сначала проверяем отрицательные формулировки (приоритет)
         has_negative = any(nb in message_bytes for nb in negative_bytes_list)
-        
-        # Если есть отрицательные формулировки, сразу возвращаем False
         if has_negative:
             logger.info("Обнаружена отрицательная формулировка, сообщение не о свободном месте")
             return False, None
+        
+        has_parking = any(pb in message_bytes for pb in parking_bytes_list)
+        has_free = any(fb in message_bytes for fb in free_bytes_list)
         
         # Если есть ключевые слова о парковке и свободе, возвращаем результат
         if has_parking and has_free:
