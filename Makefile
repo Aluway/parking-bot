@@ -1,10 +1,13 @@
-.PHONY: install run test
+.PHONY: install run stop test
 
 install:
 	uv sync
 
 run:
-	python src/bot.py
+	uv run python src/bot.py
+
+stop:
+	powershell -ExecutionPolicy Bypass -File stop.ps1
 
 test:
 	pytest tests/
