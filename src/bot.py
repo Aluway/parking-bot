@@ -46,14 +46,14 @@ def new_member_handler(message):
                     logger.info(f"Владелец добавил бота в новый чат {chat_id}. Необходимо добавить чат в ALLOWED_CHAT_IDS")
                     bot.send_message(
                         chat_id,
-                        "Бот добавлен владельцем. Для работы необходимо добавить ID чата в конфигурацию."
+                        "✅ Бот добавлен владельцем. Для работы необходимо добавить ID чата в конфигурацию."
                     )
                 else:
                     # Не владелец добавил - покидаем группу
                     logger.warning(f"Попытка добавления бота в неразрешенный чат {chat_id} пользователем {added_by}")
                     bot.send_message(
                         chat_id,
-                        "Бот работает только в разрешенных чатах. Покидаю группу."
+                        "🚫 Бот работает только в разрешенных чатах. Покидаю группу."
                     )
                     try:
                         bot.leave_chat(chat_id)
@@ -70,23 +70,23 @@ def message_handler(message):
         logger.warning(f"Доступ запрещен: {reason} (чат: {message.chat.id}, тип: {message.chat.type})")
         # В личных сообщениях можно ответить, в группах - просто игнорируем
         if message.chat.type == "private":
-            bot.reply_to(message, "Бот не работает в личных сообщениях. Добавьте бота в группу.")
+            bot.reply_to(message, "🚫 Бот не работает в личных сообщениях. Добавьте бота в группу.")
         return
     
     # Команда для проверки статуса (только для владельца)
     if message.text and message.text.startswith('/status'):
         if not check_owner_permission(message.from_user.id if message.from_user else 0):
-            bot.reply_to(message, "У вас нет прав для выполнения этой команды.")
+            bot.reply_to(message, "🚫 У вас нет прав для выполнения этой команды.")
             return
             
         from src.handlers import active_raffles
         if active_raffles:
-            status_text = "Активные розыгрыши:\n"
+            status_text = "📊 Активные розыгрыши:\n\n"
             for raffle_id, raffle in active_raffles.items():
-                status_text += f"  Место №{raffle['place_number']}: {len(raffle['participants'])} участников\n"
+                status_text += f"🎰 Место №{raffle['place_number']}: {len(raffle['participants'])} участников\n"
             bot.reply_to(message, status_text)
         else:
-            bot.reply_to(message, "Нет активных розыгрышей")
+            bot.reply_to(message, "📭 Нет активных розыгрышей")
         return
     
     # Проверяем, что это текст (не команда бота)
@@ -100,7 +100,7 @@ def callback_handler(call):
     allowed, reason = check_chat_access(call.message.chat.id, call.message.chat.type)
     if not allowed:
         logger.warning(f"Доступ запрещен для callback: {reason} (чат: {call.message.chat.id})")
-        bot.answer_callback_query(call.id, "Доступ запрещен", show_alert=True)
+        bot.answer_callback_query(call.id, "🚫 Доступ запрещен", show_alert=True)
         return
     
     handle_callback(bot, call)

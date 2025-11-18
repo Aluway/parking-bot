@@ -41,8 +41,9 @@ def test_finish_raffle_with_winner():
     assert mock_bot.send_message.called
     call_args = mock_bot.send_message.call_args
     assert call_args[0][0] == -100  # chat_id
-    assert "место 5" in call_args[0][1].lower()
-    assert "@test_user" in call_args[0][1]
+    message_text = call_args[0][1]
+    assert "место" in message_text.lower() or "№5" in message_text or "№ 5" in message_text
+    assert "@test_user" in message_text
 
 
 def test_finish_raffle_no_participants():

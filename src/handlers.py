@@ -71,7 +71,7 @@ def handle_callback(bot, call):
         
         # Проверяем, существует ли розыгрыш
         if raffle_id not in active_raffles:
-            bot.answer_callback_query(call.id, "Розыгрыш уже завершен")
+            bot.answer_callback_query(call.id, "❌ Розыгрыш уже завершен", show_alert=True)
             return
         
         # Получаем user_id
@@ -81,7 +81,7 @@ def handle_callback(bot, call):
         # Проверяем, не участвовал ли уже пользователь
         raffle = active_raffles[raffle_id]
         if user_id in raffle['participants']:
-            bot.answer_callback_query(call.id, "Вы уже участвуете!")
+            bot.answer_callback_query(call.id, "⚠️ Вы уже участвуете!", show_alert=True)
             return
         
         # Добавляем участника
@@ -93,7 +93,7 @@ def handle_callback(bot, call):
         update_raffle_button(bot, raffle_id, raffle)
         
         # Подтверждаем нажатие
-        bot.answer_callback_query(call.id, "Вы участвуете в розыгрыше!")
+        bot.answer_callback_query(call.id, "✅ Вы участвуете в розыгрыше!")
 
 def remove_oldest_raffle(bot):
     """Удаляет самый старый розыгрыш при достижении лимита"""
@@ -136,7 +136,7 @@ def finish_raffle(bot, raffle_id):
             username = "пользователь"
         
         # Отправляем сообщение с упоминанием победителя
-        message_text = f"@{username}, место {place_number} теперь за тобой!"
+        message_text = f"🎉 Поздравляем! 🎉\n\n🏆 Победитель розыгрыша места №{place_number}:\n@{username}\n\n🚗 Место теперь за тобой!"
         bot.send_message(raffle['chat_id'], message_text)
         
         logger.info(f"Победитель розыгрыша места №{place_number}: @{username}")
@@ -169,13 +169,16 @@ def format_time_remaining(seconds: int) -> str:
 def format_raffle_message(place_number: int, total_seconds: int, participants_count: int) -> str:
     """Форматирует сообщение розыгрыша с таймером"""
     time_str = format_time_remaining(total_seconds)
-    return f"🏁 Розыгрыш места №{place_number}\n⏱ Осталось: {time_str}\n👥 Участников: {participants_count}"
+    return f"🎰 Розыгрыш места №{place_number}\n⏱ Осталось: {time_str}\n👥 Участников: {participants_count}\n\n🎯 Нажми кнопку, чтобы участвовать!"
 
 
 def create_raffle_keyboard(raffle_id: str, participants_count: int) -> types.InlineKeyboardMarkup:
     """Создает клавиатуру с кнопкой и количеством участников"""
     keyboard = types.InlineKeyboardMarkup()
-    button_text = f"Я хочу! ({participants_count})" if participants_count > 0 else "Я хочу!"
+    if participants_count > 0:
+        button_text = f"🙋 Я хочу! ({participants_count})"
+    else:
+        button_text = "🙋 Я хочу!"
     button = types.InlineKeyboardButton(text=button_text, callback_data=f"want_{raffle_id}")
     keyboard.add(button)
     return keyboard
