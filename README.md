@@ -80,3 +80,4 @@ make test
 - [План разработки](docs/tasklist.md)
 - [Безопасность](docs/security.md)
 - [Конфигурация](docs/configuration.md)
+- [История изменений](CHANGELOG.md)
