@@ -22,20 +22,26 @@ def test_finish_raffle_with_winner():
     mock_bot.send_message = Mock()
     
     raffle_id = "test_raffle_1"
+    from datetime import date
     active_raffles[raffle_id] = {
         'place_number': 5,
         'participants': [123, 456, 789],
         'message_id': 100,
         'chat_id': -100,
         'timer': None,
-        'timestamp': time.time()
+        'timestamp': time.time(),
+        'date': date.today(),
+        'winner_id': None
     }
     
     # Запускаем завершение розыгрыша
     finish_raffle(mock_bot, raffle_id)
     
-    # Проверяем, что розыгрыш удален
-    assert raffle_id not in active_raffles
+    # Проверяем, что розыгрыш остался в памяти (не удаляется сразу, только в конце дня)
+    assert raffle_id in active_raffles
+    winner_id = active_raffles[raffle_id]['winner_id']
+    assert winner_id is not None  # Победитель должен быть выбран
+    assert winner_id in [123, 456, 789]  # Победитель должен быть одним из участников
     
     # Проверяем, что было отправлено сообщение
     assert mock_bot.send_message.called
@@ -51,20 +57,23 @@ def test_finish_raffle_no_participants():
     mock_bot = Mock()
     
     raffle_id = "test_raffle_2"
+    from datetime import date
     active_raffles[raffle_id] = {
         'place_number': 3,
         'participants': [],
         'message_id': 101,
         'chat_id': -100,
         'timer': None,
-        'timestamp': time.time()
+        'timestamp': time.time(),
+        'date': date.today(),
+        'winner_id': None
     }
     
     # Запускаем завершение розыгрыша
     finish_raffle(mock_bot, raffle_id)
     
-    # Проверяем, что розыгрыш удален
-    assert raffle_id not in active_raffles
+    # Проверяем, что розыгрыш остался в памяти (даже без участников)
+    assert raffle_id in active_raffles
     
     # Проверяем, что сообщение не отправлялось
     assert not mock_bot.send_message.called
@@ -130,13 +139,16 @@ def test_remove_oldest_raffle_with_timer():
     mock_timer.cancel = Mock()
     
     raffle_id = "raffle_with_timer"
+    from datetime import date
     active_raffles[raffle_id] = {
         'place_number': 1,
         'participants': [],
         'message_id': 1,
         'chat_id': -100,
         'timer': mock_timer,
-        'timestamp': time.time() - 100
+        'timestamp': time.time() - 100,
+        'date': date.today(),
+        'winner_id': None
     }
     
     # Удаляем розыгрыш

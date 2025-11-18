@@ -2,6 +2,7 @@ import threading
 import random
 import time
 import logging
+from datetime import date
 from telebot import types
 from src.gigachat_client import GigaChatClient
 from src.config import RAFFLE_TIMER_SECONDS, MAX_ACTIVE_RAFFLES
@@ -10,8 +11,10 @@ logger = logging.getLogger(__name__)
 
 gigachat_client = GigaChatClient()
 
-# Словарь активных розыгрышей: {raffle_id: {place_number, participants, message_id, chat_id, timer, update_timer, start_time}}
+# Словарь активных розыгрышей: {raffle_id: {place_number, participants, message_id, chat_id, timer, update_timer, start_time, date, winner_id}}
 active_raffles = {}
+# Множество победителей активных розыгрышей (для быстрой проверки)
+active_winners = set()
 
 def handle_text_message(bot, message):
     """Обработчик текстовых сообщений"""
@@ -24,6 +27,9 @@ def handle_text_message(bot, message):
     is_parking, place_number = gigachat_client.check_parking_message(message.text)
     
     if is_parking and place_number:
+        # Очищаем розыгрыши не сегодняшнего дня
+        cleanup_old_raffles(bot)
+        
         # Проверяем лимит активных розыгрышей
         if len(active_raffles) >= MAX_ACTIVE_RAFFLES:
             # Удаляем самый старый розыгрыш
@@ -32,6 +38,7 @@ def handle_text_message(bot, message):
         # Используем message_id как raffle_id для уникальности
         raffle_id = f"{message.chat.id}_{message.message_id}"
         start_time = time.time()
+        raffle_date = date.today()
         
         # Создаем начальное сообщение с таймером
         message_text = format_raffle_message(place_number, RAFFLE_TIMER_SECONDS, 0)
@@ -49,7 +56,9 @@ def handle_text_message(bot, message):
             'timer': None,
             'update_timer': None,
             'timestamp': start_time,
-            'start_time': start_time
+            'start_time': start_time,
+            'date': raffle_date,
+            'winner_id': None
         }
         
         # Запускаем таймер для завершения розыгрыша
@@ -84,6 +93,15 @@ def handle_callback(bot, call):
             bot.answer_callback_query(call.id, "⚠️ Вы уже участвуете!", show_alert=True)
             return
         
+        # Проверяем, не является ли пользователь победителем одного из активных розыгрышей
+        if user_id in active_winners:
+            bot.answer_callback_query(
+                call.id, 
+                "🚫 Вы уже выиграли в одном из активных розыгрышей! Не можете участвовать в других.", 
+                show_alert=True
+            )
+            return
+        
         # Добавляем участника
         raffle['participants'].append(user_id)
         participants_count = len(raffle['participants'])
@@ -104,6 +122,10 @@ def remove_oldest_raffle(bot):
     oldest_raffle_id = min(active_raffles.items(), key=lambda x: x[1]['timestamp'])[0]
     oldest_raffle = active_raffles[oldest_raffle_id]
     
+    # Удаляем победителя из списка активных победителей, если был
+    if oldest_raffle.get('winner_id'):
+        active_winners.discard(oldest_raffle['winner_id'])
+    
     # Отменяем таймеры, если они активны
     if oldest_raffle['timer']:
         oldest_raffle['timer'].cancel()
@@ -114,6 +136,32 @@ def remove_oldest_raffle(bot):
     
     # Удаляем из словаря
     del active_raffles[oldest_raffle_id]
+
+
+def cleanup_old_raffles(bot):
+    """Удаляет розыгрыши, созданные не сегодня"""
+    today = date.today()
+    raffles_to_remove = []
+    
+    for raffle_id, raffle in active_raffles.items():
+        if raffle.get('date') != today:
+            raffles_to_remove.append(raffle_id)
+    
+    for raffle_id in raffles_to_remove:
+        raffle = active_raffles[raffle_id]
+        
+        # Удаляем победителя из списка активных победителей, если был
+        if raffle.get('winner_id'):
+            active_winners.discard(raffle['winner_id'])
+        
+        # Отменяем таймеры
+        if raffle['timer']:
+            raffle['timer'].cancel()
+        if raffle.get('update_timer'):
+            raffle['update_timer'].cancel()
+        
+        logger.info(f"Удален розыгрыш места №{raffle['place_number']} (создан {raffle.get('date')}, сегодня {today})")
+        del active_raffles[raffle_id]
 
 def finish_raffle(bot, raffle_id):
     """Завершает розыгрыш и выбирает победителя"""
@@ -128,6 +176,12 @@ def finish_raffle(bot, raffle_id):
         # Случайный выбор победителя
         winner_id = random.choice(raffle['participants'])
         
+        # Сохраняем победителя в розыгрыше
+        raffle['winner_id'] = winner_id
+        
+        # Добавляем победителя в список активных победителей
+        active_winners.add(winner_id)
+        
         # Получаем информацию о победителе
         try:
             chat_member = bot.get_chat_member(raffle['chat_id'], winner_id)
@@ -139,7 +193,7 @@ def finish_raffle(bot, raffle_id):
         message_text = f"🎉 Поздравляем! 🎉\n\n🏆 Победитель розыгрыша места №{place_number}:\n@{username}\n\n🚗 Место теперь за тобой!"
         bot.send_message(raffle['chat_id'], message_text)
         
-        logger.info(f"Победитель розыгрыша места №{place_number}: @{username}")
+        logger.info(f"Победитель розыгрыша места №{place_number}: @{username} (ID: {winner_id})")
     else:
         # Никто не участвовал - очищаем розыгрыш
         logger.info(f"Розыгрыш места №{place_number} завершен, участников не было")
@@ -148,8 +202,8 @@ def finish_raffle(bot, raffle_id):
     if raffle.get('update_timer'):
         raffle['update_timer'].cancel()
     
-    # Удаляем розыгрыш из словаря
-    del active_raffles[raffle_id]
+    # НЕ удаляем розыгрыш из словаря сразу - он останется в памяти до конца дня
+    # Победитель будет удален из active_winners при cleanup_old_raffles или remove_oldest_raffle
 
 
 def format_time_remaining(seconds: int) -> str:
