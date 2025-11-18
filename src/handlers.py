@@ -23,6 +23,10 @@ def handle_text_message(bot, message):
     chat_title = message.chat.title if hasattr(message.chat, 'title') else 'личные сообщения'
     logger.info(f"Получено сообщение в {chat_type} '{chat_title}': {message.text}")
     
+    # Сначала отправляем сообщение-заглушку о проверке
+    placeholder_message = bot.reply_to(message, "⏳ Проверяю сообщение...")
+    placeholder_message_id = placeholder_message.message_id
+    
     # Проверяем через GigaChat, является ли это сообщение о свободном месте
     is_parking, place_number = gigachat_client.check_parking_message(message.text)
     
@@ -44,8 +48,22 @@ def handle_text_message(bot, message):
         message_text = format_raffle_message(place_number, RAFFLE_TIMER_SECONDS, 0)
         keyboard = create_raffle_keyboard(raffle_id, 0)
         
-        # Отправляем сообщение с кнопкой
-        bot_message = bot.reply_to(message, message_text, reply_markup=keyboard)
+        # Заменяем заглушку на основное сообщение с кнопкой
+        try:
+            bot_message = bot.edit_message_text(
+                message_text,
+                chat_id=message.chat.id,
+                message_id=placeholder_message_id,
+                reply_markup=keyboard
+            )
+        except Exception as e:
+            # Если не удалось отредактировать, отправляем новое сообщение и удаляем заглушку
+            logger.debug(f"Не удалось отредактировать заглушку: {e}")
+            try:
+                bot.delete_message(message.chat.id, placeholder_message_id)
+            except:
+                pass
+            bot_message = bot.reply_to(message, message_text, reply_markup=keyboard)
         
         # Сохраняем розыгрыш в словарь
         active_raffles[raffle_id] = {
@@ -72,6 +90,12 @@ def handle_text_message(bot, message):
         active_raffles[raffle_id]['update_timer'] = update_timer
         
         logger.info(f"Обнаружено сообщение о свободном месте №{place_number}")
+    else:
+        # Сообщение не о свободном месте - удаляем заглушку
+        try:
+            bot.delete_message(message.chat.id, placeholder_message_id)
+        except Exception as e:
+            logger.debug(f"Не удалось удалить заглушку: {e}")
 
 def handle_callback(bot, call):
     """Обработчик callback'ов кнопок"""
