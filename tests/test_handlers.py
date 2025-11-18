@@ -77,8 +77,11 @@ def test_finish_raffle_no_participants():
     # Проверяем, что розыгрыш остался в памяти (даже без участников)
     assert raffle_id in active_raffles
     
-    # Проверяем, что сообщение не отправлялось
-    assert not mock_bot.send_message.called
+    # Проверяем, что отправлено сообщение о том, что место все еще свободно
+    assert mock_bot.send_message.called
+    call_args = mock_bot.send_message.call_args
+    assert call_args[0][0] == -100  # chat_id
+    assert "Место №3 все еще свободно" in call_args[0][1]  # message_text
 
 
 def test_finish_raffle_nonexistent():

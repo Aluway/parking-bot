@@ -204,7 +204,9 @@ def finish_raffle(bot, raffle_id):
         
         logger.info(f"Победитель розыгрыша места №{place_number}: @{username} (ID: {winner_id})")
     else:
-        # Никто не участвовал - очищаем розыгрыш
+        # Никто не участвовал - сообщаем, что место все еще свободно
+        message_text = f"ℹ️ Место №{place_number} все еще свободно"
+        bot.send_message(raffle['chat_id'], message_text)
         logger.info(f"Розыгрыш места №{place_number} завершен, участников не было")
     
     # Отменяем таймер обновления, если он активен
