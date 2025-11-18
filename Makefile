@@ -10,5 +10,5 @@ stop:
 	powershell -ExecutionPolicy Bypass -File stop.ps1
 
 test:
-	pytest tests/
+	uv run pytest tests/
 

@@ -7,6 +7,7 @@ dependencies = [
     "pyTelegramBotAPI>=4.14.0",
     "gigachat>=0.1.0",
     "python-dotenv>=1.0.0",
+    "pytest>=7.0.0",
 ]
 
 [build-system]
