@@ -34,25 +34,47 @@
    - Выберите ваш репозиторий `parking-bot`
 
 4. **Настройка переменных окружения:**
-   - В настройках проекта (Settings → Variables) добавьте все переменные из `.env`:
-     ```
-     TELEGRAM_BOT_TOKEN=ваш_токен
-     GIGACHAT_CLIENT_ID=ваш_client_id
-     GIGACHAT_CLIENT_SECRET=ваш_client_secret
-     OWNER_USER_ID=ваш_user_id
-     ALLOWED_CHAT_IDS=список_чатов
-     RAFFLE_TIMER_SECONDS=120
-     MAX_ACTIVE_RAFFLES=5
-     ```
+   
+   **Способ 1 (через настройки сервиса):**
+   - После создания проекта Railway создаст сервис (service)
+   - Откройте ваш сервис (кликните на него)
+   - Перейдите во вкладку **Variables** (или **Variables** в боковом меню)
+   - Нажмите **+ New Variable** или **+ Add Variable**
+   - Добавьте каждую переменную по отдельности:
+     - **Name:** `TELEGRAM_BOT_TOKEN`, **Value:** ваш токен
+     - **Name:** `GIGACHAT_CLIENT_ID`, **Value:** ваш client_id
+     - **Name:** `GIGACHAT_CLIENT_SECRET`, **Value:** ваш client_secret
+     - **Name:** `OWNER_USER_ID`, **Value:** ваш user_id
+     - **Name:** `ALLOWED_CHAT_IDS`, **Value:** список чатов через запятую (например: `-1001234567890,-1009876543210`)
+     - **Name:** `RAFFLE_TIMER_SECONDS`, **Value:** `120` (опционально)
+     - **Name:** `MAX_ACTIVE_RAFFLES`, **Value:** `5` (опционально)
+   - После добавления каждой переменной нажмите **Add** или **Save**
+   
+   **Способ 2 (через настройки проекта):**
+   - В верхней части экрана нажмите на название проекта (или три точки рядом)
+   - Выберите **Variables** из меню
+   - Добавьте переменные так же, как в Способе 1
+   
+   **Важно:** После добавления переменных Railway автоматически перезапустит сервис
 
-5. **Настройка деплоя:**
-   - Railway должен автоматически определить Python проект и установить зависимости
-   - Если возникают ошибки с зависимостями, в настройках проекта (Settings → Build & Deploy) проверьте:
-     - **Build Command:** должен быть пустым или `pip install -r requirements.txt`
-     - **Start Command:** `python src/bot.py`
-   - Если Railway не устанавливает зависимости автоматически:
-     - В Settings → Build & Deploy → Build Command добавьте: `pip install --upgrade pip && pip install -r requirements.txt`
-     - В Start Command укажите: `python src/bot.py`
+5. **Настройка деплоя (ВАЖНО!):**
+   
+   **Обязательно настройте команды сборки вручную:**
+   
+   - Откройте ваш сервис в Railway
+   - Перейдите в **Settings** → **Build & Deploy** (или найдите вкладку **Settings**)
+   - В разделе **Build Command** укажите:
+     ```
+     pip install --upgrade pip && pip install -r requirements.txt
+     ```
+   - В разделе **Start Command** укажите:
+     ```
+     python src/bot.py
+     ```
+   - Сохраните изменения
+   - Нажмите **Redeploy** (или Railway перезапустит автоматически)
+   
+   **Примечание:** Файлы `nixpacks.toml` и `railway.json` могут не работать автоматически, поэтому лучше указать команды вручную в настройках.
 
 6. **Деплой:**
    - Railway автоматически задеплоит проект
