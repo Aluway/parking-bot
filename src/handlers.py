@@ -15,7 +15,7 @@ active_raffles = {}
 
 def handle_text_message(bot, message):
     """Обработчик текстовых сообщений"""
-    # Логируем информацию о сообщении
+    # Проверка доступа уже выполнена в bot.py, здесь просто логируем
     chat_type = message.chat.type
     chat_title = message.chat.title if hasattr(message.chat, 'title') else 'личные сообщения'
     logger.info(f"Получено сообщение в {chat_type} '{chat_title}': {message.text}")

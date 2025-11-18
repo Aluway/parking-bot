@@ -20,3 +20,12 @@ GIGACHAT_CLIENT_ID = os.getenv("GIGACHAT_CLIENT_ID")
 GIGACHAT_CLIENT_SECRET = os.getenv("GIGACHAT_CLIENT_SECRET")
 GIGACHAT_VERIFY_SSL = os.getenv("GIGACHAT_VERIFY_SSL", "false").lower() == "true"
 
+# Безопасность
+OWNER_USER_ID = int(os.getenv("OWNER_USER_ID", "0"))  # ID владельца бота
+ALLOWED_CHAT_IDS_STR = os.getenv("ALLOWED_CHAT_IDS", "")  # Список разрешенных чатов через запятую
+ALLOWED_CHAT_IDS = [
+    int(chat_id.strip()) 
+    for chat_id in ALLOWED_CHAT_IDS_STR.split(",") 
+    if chat_id.strip()
+]  # Список разрешенных чатов
+
