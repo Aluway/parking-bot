@@ -20,6 +20,7 @@ def test_finish_raffle_with_winner():
     mock_bot.get_chat_member.return_value.user = MagicMock()
     mock_bot.get_chat_member.return_value.user.username = "test_user"
     mock_bot.send_message = Mock()
+    mock_bot.delete_message = Mock()
     
     raffle_id = "test_raffle_1"
     from datetime import date
@@ -55,6 +56,7 @@ def test_finish_raffle_with_winner():
 def test_finish_raffle_no_participants():
     """Тест завершения розыгрыша без участников"""
     mock_bot = Mock()
+    mock_bot.delete_message = Mock()
     
     raffle_id = "test_raffle_2"
     from datetime import date
@@ -181,6 +183,7 @@ def test_finish_raffle_excludes_previous_winner():
     mock_bot.get_chat_member.return_value.user = MagicMock()
     mock_bot.get_chat_member.return_value.user.username = "test_user"
     mock_bot.send_message = Mock()
+    mock_bot.delete_message = Mock()
     
     # Очищаем активных победителей
     active_winners.clear()
@@ -201,14 +204,17 @@ def test_finish_raffle_excludes_previous_winner():
     
     finish_raffle(mock_bot, raffle_id_1)
     
-    # Проверяем, что пользователь 123 теперь в списке победителей
-    assert 123 in active_winners
+    # Проверяем, что был выбран победитель и он добавлен в список победителей
+    winner_id_1 = active_raffles[raffle_id_1]['winner_id']
+    assert winner_id_1 is not None
+    assert winner_id_1 in [123, 456]  # Победитель должен быть одним из участников
+    assert winner_id_1 in active_winners
     
-    # Создаем второй розыгрыш, где пользователь 123 тоже участвует
+    # Создаем второй розыгрыш, где участвует победитель первого розыгрыша
     raffle_id_2 = "test_raffle_2"
     active_raffles[raffle_id_2] = {
         'place_number': 2,
-        'participants': [123, 456, 789],  # 123 уже победитель первого розыгрыша
+        'participants': [winner_id_1, 456, 789],  # Победитель первого розыгрыша участвует
         'message_id': 101,
         'chat_id': -100,
         'timer': None,
@@ -220,9 +226,9 @@ def test_finish_raffle_excludes_previous_winner():
     # Завершаем второй розыгрыш
     finish_raffle(mock_bot, raffle_id_2)
     
-    # Проверяем, что победитель второго розыгрыша НЕ 123
+    # Проверяем, что победитель второго розыгрыша НЕ является победителем первого
     winner_id_2 = active_raffles[raffle_id_2]['winner_id']
-    assert winner_id_2 != 123
+    assert winner_id_2 != winner_id_1
     assert winner_id_2 in [456, 789]  # Победитель должен быть из других участников
     
     # Очищаем

@@ -211,6 +211,13 @@ def finish_raffle(bot, raffle_id):
     if raffle.get('update_timer'):
         raffle['update_timer'].cancel()
     
+    # Удаляем сообщение розыгрыша из чата
+    try:
+        bot.delete_message(raffle['chat_id'], raffle['message_id'])
+        logger.info(f"Сообщение розыгрыша места №{place_number} удалено из чата")
+    except Exception as e:
+        logger.debug(f"Не удалось удалить сообщение розыгрыша {raffle_id}: {e}")
+    
     # НЕ удаляем розыгрыш из словаря сразу - он останется в памяти до конца дня
     # Победитель будет удален из active_winners при cleanup_old_raffles или remove_oldest_raffle
 
