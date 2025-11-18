@@ -59,22 +59,28 @@
 
 5. **Настройка деплоя:**
    
-   Railway должен автоматически определить Python проект по наличию `requirements.txt` и `nixpacks.toml`.
-   
-   **Если автоматическое определение не работает:**
+   **Используем Dockerfile (рекомендуется):**
    
    - Откройте ваш сервис в Railway
    - Перейдите в **Settings** → **Build & Deploy**
-   - Убедитесь, что **Builder** установлен в **Nixpacks**
-   - В разделе **Start Command** должно быть: `python src/bot.py`
-   - Если Start Command пустой, укажите: `python src/bot.py`
+   - В разделе **Builder** выберите **Dockerfile**
+   - Убедитесь, что **Dockerfile Path** указан как `Dockerfile`
+   - **Start Command** должен быть пустым (команда указана в Dockerfile)
    - Сохраните изменения
    - Нажмите **Redeploy**
+   
+   **Альтернатива (если Dockerfile не работает):**
+   
+   - В **Settings** → **Build & Deploy** выберите **Builder: Nixpacks**
+   - В **Build Command** укажите: `pip install --upgrade pip && pip install -r requirements.txt`
+   - В **Start Command** укажите: `python src/bot.py`
+   - Сохраните и перезапустите
    
    **Проверка логов:**
    - После деплоя откройте вкладку **Deployments**
    - Выберите последний деплой
    - В логах должно быть видно установку зависимостей: `pip install -r requirements.txt`
+   - Или при использовании Dockerfile: `Step 4/6 : RUN pip install...`
 
 6. **Деплой:**
    - Railway автоматически задеплоит проект

@@ -1,18 +1,18 @@
-# Dockerfile для универсального деплоя
+# Dockerfile для деплоя на Railway
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Устанавливаем uv для управления зависимостями
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
-
-# Копируем файлы проекта
-COPY pyproject.toml uv.lock ./
-COPY src ./src
+# Копируем requirements.txt первым (для кеширования слоя)
+COPY requirements.txt .
 
 # Устанавливаем зависимости
-RUN uv sync --frozen
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Копируем исходный код
+COPY src ./src
 
 # Запускаем бота
-CMD ["uv", "run", "python", "src/bot.py"]
+CMD ["python", "src/bot.py"]
 
