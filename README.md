@@ -15,11 +15,17 @@ cp .env.example .env
 ```
 
 3. Заполните в `.env`:
+   
+   **Обязательные параметры:**
    - `TELEGRAM_BOT_TOKEN` - токен вашего Telegram бота
    - `GIGACHAT_CLIENT_ID` - Client ID для GigaChat API
    - `GIGACHAT_CLIENT_SECRET` - Client Secret для GigaChat API
    - `OWNER_USER_ID` - ваш Telegram User ID (получить у [@userinfobot](https://t.me/userinfobot))
    - `ALLOWED_CHAT_IDS` - список ID разрешенных чатов через запятую (получить у [@getidsbot](https://t.me/getidsbot))
+   
+   **Настраиваемые параметры (опционально):**
+   - `RAFFLE_TIMER_SECONDS` - время таймера розыгрыша в секундах (по умолчанию: 120 секунд = 2 минуты)
+   - `MAX_ACTIVE_RAFFLES` - максимальное количество одновременных активных розыгрышей (по умолчанию: 5)
 
 ## Запуск
 
@@ -61,6 +67,10 @@ make test
 
 Подробнее: [Документация по безопасности](docs/security.md)
 
+## Конфигурация
+
+Подробная информация о настройке параметров бота: [Документация по конфигурации](docs/configuration.md)
+
 ## Документация
 
 - [Идея проекта](docs/idea.md)
@@ -68,3 +78,4 @@ make test
 - [Правила разработки](docs/conventions.md)
 - [План разработки](docs/tasklist.md)
 - [Безопасность](docs/security.md)
+- [Конфигурация](docs/configuration.md)
