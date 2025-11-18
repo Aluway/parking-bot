@@ -172,3 +172,61 @@ def test_remove_oldest_raffle_empty():
     # Словарь должен остаться пустым
     assert len(active_raffles) == 0
 
+
+def test_finish_raffle_excludes_previous_winner():
+    """Тест исключения уже выигравшего пользователя из выбора победителя"""
+    from src.handlers import active_winners
+    mock_bot = Mock()
+    mock_bot.get_chat_member.return_value = MagicMock()
+    mock_bot.get_chat_member.return_value.user = MagicMock()
+    mock_bot.get_chat_member.return_value.user.username = "test_user"
+    mock_bot.send_message = Mock()
+    
+    # Очищаем активных победителей
+    active_winners.clear()
+    
+    # Создаем первый розыгрыш и завершаем его (пользователь 123 выигрывает)
+    raffle_id_1 = "test_raffle_1"
+    from datetime import date
+    active_raffles[raffle_id_1] = {
+        'place_number': 1,
+        'participants': [123, 456],
+        'message_id': 100,
+        'chat_id': -100,
+        'timer': None,
+        'timestamp': time.time(),
+        'date': date.today(),
+        'winner_id': None
+    }
+    
+    finish_raffle(mock_bot, raffle_id_1)
+    
+    # Проверяем, что пользователь 123 теперь в списке победителей
+    assert 123 in active_winners
+    
+    # Создаем второй розыгрыш, где пользователь 123 тоже участвует
+    raffle_id_2 = "test_raffle_2"
+    active_raffles[raffle_id_2] = {
+        'place_number': 2,
+        'participants': [123, 456, 789],  # 123 уже победитель первого розыгрыша
+        'message_id': 101,
+        'chat_id': -100,
+        'timer': None,
+        'timestamp': time.time(),
+        'date': date.today(),
+        'winner_id': None
+    }
+    
+    # Завершаем второй розыгрыш
+    finish_raffle(mock_bot, raffle_id_2)
+    
+    # Проверяем, что победитель второго розыгрыша НЕ 123
+    winner_id_2 = active_raffles[raffle_id_2]['winner_id']
+    assert winner_id_2 != 123
+    assert winner_id_2 in [456, 789]  # Победитель должен быть из других участников
+    
+    # Очищаем
+    del active_raffles[raffle_id_1]
+    del active_raffles[raffle_id_2]
+    active_winners.clear()
+

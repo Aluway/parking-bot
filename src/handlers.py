@@ -173,8 +173,17 @@ def finish_raffle(bot, raffle_id):
     place_number = raffle['place_number']
     
     if raffle['participants']:
-        # Случайный выбор победителя
-        winner_id = random.choice(raffle['participants'])
+        # Исключаем участников, которые уже выиграли в других активных розыгрышах
+        eligible_participants = [p for p in raffle['participants'] if p not in active_winners]
+        
+        if eligible_participants:
+            # Выбираем победителя из тех, кто еще не выиграл
+            winner_id = random.choice(eligible_participants)
+        else:
+            # Если все участники уже победители (маловероятно, но на всякий случай)
+            # Выбираем из всех участников
+            winner_id = random.choice(raffle['participants'])
+            logger.warning(f"Все участники розыгрыша места №{place_number} уже победители, выбран: {winner_id}")
         
         # Сохраняем победителя в розыгрыше
         raffle['winner_id'] = winner_id
