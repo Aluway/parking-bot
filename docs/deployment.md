@@ -19,10 +19,18 @@
 2. **Регистрация на Railway:**
    - Перейдите на [railway.app](https://railway.app)
    - Войдите через GitHub
+   - При первом входе Railway автоматически создаст workspace (рабочее пространство)
+   - Если workspace не создан автоматически:
+     - Нажмите на ваш профиль (правый верхний угол)
+     - Выберите "New Workspace" или "Create Workspace"
+     - Дайте название workspace (например, "My Projects")
+     - Нажмите "Create"
 
 3. **Создание проекта:**
-   - Нажмите "New Project"
+   - Убедитесь, что вы находитесь в нужном workspace (проверьте в левом верхнем углу)
+   - Нажмите "New Project" (или "+ New" → "New Project")
    - Выберите "Deploy from GitHub repo"
+   - Если это первый раз, Railway попросит разрешить доступ к GitHub репозиториям
    - Выберите ваш репозиторий `parking-bot`
 
 4. **Настройка переменных окружения:**
@@ -38,10 +46,13 @@
      ```
 
 5. **Настройка деплоя:**
-   - Railway автоматически определит Python проект
-   - Если не определит, в настройках (Settings → Build) укажите:
-     - **Build Command:** `pip install -r requirements.txt`
+   - Railway должен автоматически определить Python проект и установить зависимости
+   - Если возникают ошибки с зависимостями, в настройках проекта (Settings → Build & Deploy) проверьте:
+     - **Build Command:** должен быть пустым или `pip install -r requirements.txt`
      - **Start Command:** `python src/bot.py`
+   - Если Railway не устанавливает зависимости автоматически:
+     - В Settings → Build & Deploy → Build Command добавьте: `pip install --upgrade pip && pip install -r requirements.txt`
+     - В Start Command укажите: `python src/bot.py`
 
 6. **Деплой:**
    - Railway автоматически задеплоит проект
